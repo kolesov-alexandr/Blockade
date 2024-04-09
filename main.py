@@ -114,8 +114,9 @@ def feedback_page(changed=False):
                 start_page()
                 pygame.display.flip()
             elif 75 <= x <= 270 and 475 <= y <= 545:
-                my_address = "dnevniki_blokada@bk.ru"
-                password = "swikr1UJy8KTs7879h81"
+                with open("security.txt") as sec_file:
+                    my_address = sec_file.readline()
+                    password = sec_file.readline()
                 server = smtplib.SMTP_SSL("smtp.mail.ru")
                 server.login(my_address, password)
                 message = ("Subject: Обратная связь по приложению\n" + msg).encode("utf-8")
