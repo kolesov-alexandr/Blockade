@@ -4,6 +4,8 @@ import sys
 import webbrowser
 import smtplib
 
+from configparser import ConfigParser
+
 
 def load_image(name, colorkey=None):
     if not os.path.isfile(name):
@@ -114,9 +116,11 @@ def feedback_page(changed=False):
                 start_page()
                 pygame.display.flip()
             elif 75 <= x <= 270 and 475 <= y <= 545:
-                with open("security.txt") as sec_file:
-                    my_address = sec_file.readline()
-                    password = sec_file.readline()
+                urlsconf = "config/config.ini"
+                config = ConfigParser()
+                config.read(urlsconf)
+                my_address = config["security"]["address"]
+                password = config["security"]["password"]
                 server = smtplib.SMTP_SSL("smtp.mail.ru")
                 server.login(my_address, password)
                 message = ("Subject: Обратная связь по приложению\n" + msg).encode("utf-8")
