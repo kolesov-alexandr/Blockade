@@ -2,6 +2,7 @@ import pygame
 import os
 import sys
 import webbrowser
+import smtplib
 
 
 def load_image(name, colorkey=None):
@@ -37,7 +38,7 @@ def start_page(changed=False):
             x, y = event.pos
             if 65 <= x <= 260 and 590 <= y <= 680:
                 window = "feedback"
-                feedback_page()
+                feedback_page(changed=True)
                 pygame.display.flip()
             elif 315 <= x <= 515 and 590 <= y <= 680:
                 window = "sources"
@@ -78,7 +79,7 @@ def sources_page():
             x, y = event.pos
             if 65 <= x <= 260 and 590 <= y <= 680:
                 window = "feedback"
-                feedback_page()
+                feedback_page(changed=True)
                 pygame.display.flip()
             elif 455 <= x <= 535 and 430 <= y <= 500:
                 screen.blit(start_page_img, (0, 0))
@@ -89,25 +90,57 @@ def sources_page():
                 webbrowser.open("https://prozhito.org")
 
 
-def feedback_page():
-    global window, current_year
-    feedback_page_img = load_image("img/feedback_page.png")
-    screen.blit(feedback_page_img, (0, 0))
-    pygame.display.flip()
+def feedback_page(changed=False):
+    global window, current_year, msg
+    if changed:
+        feedback_page_img = load_image("img/feedback_page.png")
+        screen.blit(feedback_page_img, (0, 0))
+        pygame.display.flip()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             sys.exit(0)
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             x, y = event.pos
             if 320 <= x <= 515 and 590 <= y <= 680:
+                msg = ""
                 window = "sources"
                 sources_page()
                 pygame.display.flip()
             elif 440 <= x <= 520 and 475 <= y <= 545:
+                msg = ""
                 screen.blit(start_page_img, (0, 0))
+                pygame.display.flip()
                 window = "start"
                 start_page()
                 pygame.display.flip()
+            elif 75 <= x <= 270 and 475 <= y <= 545:
+                my_address = "dnevniki_blokada@bk.ru"
+                password = "swikr1UJy8KTs7879h81"
+                server = smtplib.SMTP_SSL("smtp.mail.ru")
+                server.login(my_address, password)
+                message = ("Subject: Обратная связь по приложению\n" + msg).encode("utf-8")
+                server.sendmail(my_address, my_address, message)
+                server.quit()
+                msg = ""
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_BACKSPACE:
+                msg = msg[:-1]
+            elif event.key not in {pygame.K_TAB, pygame.K_DELETE, pygame.K_ESCAPE, pygame.K_RETURN}:
+                msg = msg + event.unicode
+        if window == "feedback":
+            feedback_font = pygame.font.SysFont("cambria", 30)
+            feedback_text = feedback_font.render("", True, pygame.Color("black"))
+            x0 = 70
+            y0 = 95
+            new_msg = msg[(len(msg) - 1) // 180 * 180:]
+            feedback_page_img = load_image("img/feedback_page.png")
+            screen.blit(feedback_page_img, (0, 0))
+            for i in range(0, len(new_msg), 20):
+                feedback_text = feedback_font.render(new_msg[i:i + 20], True, pygame.Color("black"))
+                screen.blit(feedback_text, (x0, y0 + 40 * ((i + 1) // 20)))
+            cursor = feedback_font.render("|", True, pygame.Color("brown"))
+            screen.blit(cursor, (x0 + feedback_text.get_width(), y0 + 40 * max((((len(new_msg) + 19) // 20) - 1), 0)))
+            pygame.display.flip()
 
 
 def letters_page(year, changed1=False, changed2=False):
@@ -181,7 +214,8 @@ def letters_page(year, changed1=False, changed2=False):
                 pygame.display.flip()
             for i in range(len(letters_pos)):
                 for j in range(len(letters_pos[i])):
-                    if letters_pos[i][j][0] <= x <= letters_pos[i][j][2] and letters_pos[i][j][1] <= y <= letters_pos[i][j][3]:
+                    if letters_pos[i][j][0] <= x <= letters_pos[i][j][2] and letters_pos[i][j][1] <= y <= \
+                            letters_pos[i][j][3]:
                         letter = letters[i * 6 + j]
                         current_letter = letter
                         window = "authors"
@@ -381,6 +415,7 @@ window = "start"
 current_year = 0
 current_letter = ""
 current_author = ""
+msg = ""
 is_first_note = False
 is_last_note = False
 while True:
